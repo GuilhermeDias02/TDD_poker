@@ -38,10 +38,13 @@ function generateCards(int $players): array {
         $holes[$i] = array_slice($cards, 5 + $i * 2, 2);
     }
     $result = ["community" => $community, "holes" => $holes];
-    // print_r(count($result['community']));
-    // print_r(count($result['holes'][0]));
     return $result;
 }
 
-// print_r(generateCards(2));
-// generateCards(2);
+function findRule(array $community, array $playerHole): bool{
+    
+    return false;
+}
+
+echo "Generated cards:/n";
+print_r(generateCards(2));
