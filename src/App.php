@@ -134,14 +134,29 @@ function findRule(array $community, array $playerHole): int {
 }
 
 function getWinner(array $playerRules): array {
-    //inside an array return the number of the player with the highest rule inside
-    //if tie explicit it by returning an array with multiple player numbers
+    $best = min($playerRules);
+    return array_keys(array_filter($playerRules, fn($rule) => $rule === $best));
+}
+
+function showWinnerOrTie(array $roundResults): void {
+    if (count($roundResults) === 1) {
+        echo "\nThe winner is player " . $roundResults[0] + 1 . " !";
+    } else {
+        echo "\nIt's a tie between players: ";
+        $displayResults = array_map(function($val) { return $val + 1; }, $roundResults);
+        echo implode(', ', $displayResults) . " !";
+    }
 }
 
 echo "Generated cards:\n";
-$result = generateCards(2);
+$result = generateCards(5);
 print_r($result);
 
-for ($i = 0; $i < 2; $i++) {
-    echo "\n rule associated with player " . $i + 1 . " is " . findRule($result['community'], $result['holes'][$i]);
+$playerBets = [];
+
+for ($i = 0; $i < 5; $i++) {
+    $playerBets[$i] = findRule($result['community'], $result['holes'][$i]);
+    echo "\n rule associated with player " . $i + 1 . " is " . $playerBets[$i];
 }
+
+showWinnerOrTie(getWinner($playerBets));
