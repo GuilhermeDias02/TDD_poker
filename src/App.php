@@ -133,6 +133,11 @@ function findRule(array $community, array $playerHole): int {
     return 9;
 }
 
+function getWinner(array $playerRules): array {
+    //inside an array return the number of the player with the highest rule inside
+    //if tie explicit it by returning an array with multiple player numbers
+}
+
 echo "Generated cards:\n";
 $result = generateCards(2);
 print_r($result);

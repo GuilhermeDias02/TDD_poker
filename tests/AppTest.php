@@ -154,3 +154,34 @@ test('rules returns 9 for high card', function () {
     ];
     expect(findRule($community, $playerHole))->toBe(9);
 });
+
+// getWinner: single winner (player 0 has straight flush, rank 1)
+test('getWinner returns [0] when first player has the best hand', function () {
+    $playerRules = [1, 8, 3, 5, 3];
+    expect(getWinner($playerRules))->toBe([0]);
+});
+
+// getWinner: single winner in the middle of the array
+test('getWinner returns [1] when second player has the best hand', function () {
+    $playerRules = [5, 2, 6, 8];
+    expect(getWinner($playerRules))->toBe([1]);
+});
+
+// getWinner: two-way tie (players 1 and 3 both have rank 3)
+test('getWinner returns [1, 3] when two players tie', function () {
+    $playerRules = [8, 3, 5, 3];
+    expect(getWinner($playerRules))->toBe([1, 3]);
+});
+
+// getWinner: all players tie
+test('getWinner returns all indices when every player ties', function () {
+    $playerRules = [9, 9, 9];
+    expect(getWinner($playerRules))->toBe([0, 1, 2]);
+});
+
+// getWinner: single player always wins
+test('getWinner returns [0] for a single player', function () {
+    $playerRules = [4];
+    expect(getWinner($playerRules))->toBe([0]);
+});
+
