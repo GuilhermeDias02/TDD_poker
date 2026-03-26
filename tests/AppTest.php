@@ -185,3 +185,79 @@ test('getWinner returns [0] for a single player', function () {
     expect(getWinner($playerRules))->toBe([0]);
 });
 
+// --- Tie-break: cases where getWinner incorrectly declares a tie ---
+// Both players have rank 1 (straight flush) but player 0 has a royal flush (A-high)
+// and player 1 has a 9-high straight flush. Player 0 should win, not a tie.
+test('getWinner incorrectly declares a tie between royal flush and 9-high straight flush', function () {
+    $community = [
+        ["value" => "Q",  "suit" => "hearts"],
+        ["value" => "J",  "suit" => "hearts"],
+        ["value" => "10", "suit" => "hearts"],
+        ["value" => "2",  "suit" => "clubs"],
+        ["value" => "3",  "suit" => "diamonds"],
+    ];
+    $player0Hole = [
+        ["value" => "A", "suit" => "hearts"],   // completes A-K-Q-J-10 royal flush
+        ["value" => "K", "suit" => "hearts"],
+    ];
+    $player1Hole = [
+        ["value" => "9", "suit" => "hearts"],   // completes 9-10-J-Q-K... wait, no K here
+        ["value" => "8", "suit" => "hearts"],   // completes 8-9-10-J-Q straight flush
+    ];
+    $playerRules = [findRule($community, $player0Hole), findRule($community, $player1Hole)];
+    // Both return rank 1 — getWinner sees a tie and returns [0, 1]
+    expect($playerRules)->toBe([1, 1]);
+    // But the correct winner is only player 0; this assertion fails, proving the gap
+    expect(getWinner($playerRules))->toBe([0]);
+});
+
+// Both players have rank 8 (one pair) but player 1 has a higher pair (Ks vs Qs).
+// Player 1 should win, not a tie.
+test('getWinner incorrectly declares a tie between a pair of Kings and a pair of Queens', function () {
+    $community = [
+        ["value" => "5", "suit" => "hearts"],
+        ["value" => "7", "suit" => "diamonds"],
+        ["value" => "2", "suit" => "clubs"],
+        ["value" => "3", "suit" => "spades"],
+        ["value" => "9", "suit" => "hearts"],
+    ];
+    $player0Hole = [
+        ["value" => "Q", "suit" => "hearts"],
+        ["value" => "Q", "suit" => "spades"],   // pair of Queens
+    ];
+    $player1Hole = [
+        ["value" => "K", "suit" => "hearts"],
+        ["value" => "K", "suit" => "spades"],   // pair of Kings
+    ];
+    $playerRules = [findRule($community, $player0Hole), findRule($community, $player1Hole)];
+    // Both return rank 8 — getWinner sees a tie and returns [0, 1]
+    expect($playerRules)->toBe([8, 8]);
+    // But the correct winner is only player 1; this assertion fails, proving the gap
+    expect(getWinner($playerRules))->toBe([1]);
+});
+
+// Both players have rank 9 (high card) but player 0's best card is an Ace vs a King.
+// Player 0 should win, not a tie.
+test('getWinner incorrectly declares a tie between Ace-high and King-high', function () {
+    $community = [
+        ["value" => "8", "suit" => "hearts"],
+        ["value" => "5", "suit" => "diamonds"],
+        ["value" => "3", "suit" => "clubs"],
+        ["value" => "J", "suit" => "spades"],
+        ["value" => "2", "suit" => "hearts"],
+    ];
+    $player0Hole = [
+        ["value" => "A", "suit" => "clubs"],    // Ace high
+        ["value" => "4", "suit" => "diamonds"],
+    ];
+    $player1Hole = [
+        ["value" => "K", "suit" => "clubs"],    // King high
+        ["value" => "6", "suit" => "diamonds"],
+    ];
+    $playerRules = [findRule($community, $player0Hole), findRule($community, $player1Hole)];
+    // Both return rank 9 — getWinner sees a tie and returns [0, 1]
+    expect($playerRules)->toBe([9, 9]);
+    // But the correct winner is only player 0; this assertion fails, proving the gap
+    expect(getWinner($playerRules))->toBe([0]);
+});
+

@@ -156,7 +156,7 @@ $playerBets = [];
 
 for ($i = 0; $i < 5; $i++) {
     $playerBets[$i] = findRule($result['community'], $result['holes'][$i]);
-    echo "\n rule associated with player " . $i + 1 . " is " . $playerBets[$i];
+    echo "\nRule associated with player " . $i + 1 . " is " . $playerBets[$i];
 }
 
 showWinnerOrTie(getWinner($playerBets));
