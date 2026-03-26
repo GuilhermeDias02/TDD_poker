@@ -1,0 +1,14 @@
+{
+    "scripts": {
+        "test": "pest"
+    },
+    "require-dev": {
+        "pestphp/pest-plugin": "^3.0",
+        "pestphp/pest": "^3.8"
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    }
+}
