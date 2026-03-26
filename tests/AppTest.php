@@ -155,40 +155,103 @@ test('rules returns 9 for high card', function () {
     expect(findRule($community, $playerHole))->toBe(9);
 });
 
-// getWinner: single winner (player 0 has straight flush, rank 1)
+// getWinner: single winner (player 0 has straight flush, best hand)
 test('getWinner returns [0] when first player has the best hand', function () {
-    $playerRules = [1, 8, 3, 5, 3];
-    expect(getWinner($playerRules))->toBe([0]);
+    $community = [
+        ["value" => "A", "suit" => "hearts"],
+        ["value" => "K", "suit" => "hearts"],
+        ["value" => "Q", "suit" => "hearts"],
+        ["value" => "J", "suit" => "hearts"],
+        ["value" => "2", "suit" => "clubs"],
+    ];
+    $holes = [
+        [["value" => "10", "suit" => "hearts"], ["value" => "3", "suit" => "diamonds"]], // straight flush
+        [["value" => "8",  "suit" => "clubs"],  ["value" => "7", "suit" => "spades"]],   // high card
+        [["value" => "Q",  "suit" => "spades"], ["value" => "Q", "suit" => "clubs"]],    // full house
+        [["value" => "5",  "suit" => "diamonds"],["value" => "6","suit" => "clubs"]],    // straight
+        [["value" => "K",  "suit" => "clubs"],  ["value" => "K", "suit" => "spades"]],   // full house
+    ];
+    expect(getWinner($community, $holes))->toBe([0]);
 });
 
 // getWinner: single winner in the middle of the array
 test('getWinner returns [1] when second player has the best hand', function () {
-    $playerRules = [5, 2, 6, 8];
-    expect(getWinner($playerRules))->toBe([1]);
+    $community = [
+        ["value" => "A", "suit" => "hearts"],
+        ["value" => "A", "suit" => "diamonds"],
+        ["value" => "A", "suit" => "clubs"],
+        ["value" => "2", "suit" => "spades"],
+        ["value" => "3", "suit" => "clubs"],
+    ];
+    $holes = [
+        [["value" => "5", "suit" => "hearts"],  ["value" => "6", "suit" => "clubs"]],   // three of a kind
+        [["value" => "A", "suit" => "spades"],  ["value" => "K", "suit" => "hearts"]],  // four of a kind
+        [["value" => "7", "suit" => "diamonds"],["value" => "8", "suit" => "clubs"]],   // three of a kind
+        [["value" => "9", "suit" => "spades"],  ["value" => "4", "suit" => "hearts"]],  // three of a kind
+    ];
+    expect(getWinner($community, $holes))->toBe([1]);
 });
 
-// getWinner: two-way tie (players 1 and 3 both have rank 3)
-test('getWinner returns [1, 3] when two players tie', function () {
-    $playerRules = [8, 3, 5, 3];
-    expect(getWinner($playerRules))->toBe([1, 3]);
+// getWinner: two-way true tie (identical hands, same ranks, same kickers)
+test('getWinner returns [1, 3] when two players genuinely tie', function () {
+    // Community top 5: A-K-Q-J-5. Players 1 and 3 can't improve on it with their low hole cards.
+    // Player 2 has a 9 which beats the community 5, giving A-K-Q-J-9, so player 2 wins over 1&3.
+    // We need players 1 and 3 to share the same best 5 and beat player 0 and player 2.
+    // Community: A K Q J 5 — players with hole 3,4 use community top 5: A-K-Q-J-5
+    // Player 0: hole 2,3 — best 5 is A-K-Q-J-5 same... we need player 0 to be worse.
+    // Simplest: give player 0 no improvement (2,3) same as 1 and 3, but make community
+    // such that players 1 and 3 share a pair that beats players 0 and 2.
+    $community = [
+        ["value" => "A", "suit" => "hearts"],
+        ["value" => "K", "suit" => "diamonds"],
+        ["value" => "Q", "suit" => "clubs"],
+        ["value" => "2", "suit" => "spades"],
+        ["value" => "3", "suit" => "hearts"],
+    ];
+    $holes = [
+        [["value" => "5",  "suit" => "clubs"],  ["value" => "6",  "suit" => "diamonds"]], // high card A, kicker K Q 6 5
+        [["value" => "J",  "suit" => "clubs"],  ["value" => "J",  "suit" => "diamonds"]], // pair of Jacks
+        [["value" => "10", "suit" => "hearts"], ["value" => "9",  "suit" => "spades"]],   // high card A, kicker K Q 10 9
+        [["value" => "J",  "suit" => "hearts"], ["value" => "J",  "suit" => "spades"]],   // pair of Jacks (same as player 1)
+    ];
+    expect(getWinner($community, $holes))->toBe([1, 3]);
 });
 
-// getWinner: all players tie
-test('getWinner returns all indices when every player ties', function () {
-    $playerRules = [9, 9, 9];
-    expect(getWinner($playerRules))->toBe([0, 1, 2]);
+// getWinner: all players genuinely tie (identical community, low hole cards that don't affect top 5)
+test('getWinner returns all indices when every player genuinely ties', function () {
+    $community = [
+        ["value" => "A", "suit" => "hearts"],
+        ["value" => "K", "suit" => "diamonds"],
+        ["value" => "Q", "suit" => "clubs"],
+        ["value" => "J", "suit" => "spades"],
+        ["value" => "10","suit" => "hearts"],
+    ];
+    $holes = [
+        [["value" => "2", "suit" => "clubs"],  ["value" => "3", "suit" => "diamonds"]],
+        [["value" => "2", "suit" => "hearts"], ["value" => "3", "suit" => "spades"]],
+        [["value" => "2", "suit" => "spades"], ["value" => "3", "suit" => "clubs"]],
+    ];
+    expect(getWinner($community, $holes))->toBe([0, 1, 2]);
 });
 
 // getWinner: single player always wins
 test('getWinner returns [0] for a single player', function () {
-    $playerRules = [4];
-    expect(getWinner($playerRules))->toBe([0]);
+    $community = [
+        ["value" => "A", "suit" => "hearts"],
+        ["value" => "2", "suit" => "clubs"],
+        ["value" => "5", "suit" => "diamonds"],
+        ["value" => "8", "suit" => "spades"],
+        ["value" => "J", "suit" => "clubs"],
+    ];
+    $holes = [
+        [["value" => "K", "suit" => "clubs"], ["value" => "3", "suit" => "hearts"]],
+    ];
+    expect(getWinner($community, $holes))->toBe([0]);
 });
 
-// --- Tie-break: cases where getWinner incorrectly declares a tie ---
-// Both players have rank 1 (straight flush) but player 0 has a royal flush (A-high)
-// and player 1 has a 9-high straight flush. Player 0 should win, not a tie.
-test('getWinner incorrectly declares a tie between royal flush and 9-high straight flush', function () {
+// --- Tie-break: getWinner now resolves these correctly via findScore ---
+// Player 0 has a royal flush (A-high), player 1 has a 9-high straight flush.
+test('getWinner returns [0] for royal flush over 9-high straight flush', function () {
     $community = [
         ["value" => "Q",  "suit" => "hearts"],
         ["value" => "J",  "suit" => "hearts"],
@@ -196,24 +259,15 @@ test('getWinner incorrectly declares a tie between royal flush and 9-high straig
         ["value" => "2",  "suit" => "clubs"],
         ["value" => "3",  "suit" => "diamonds"],
     ];
-    $player0Hole = [
-        ["value" => "A", "suit" => "hearts"],   // completes A-K-Q-J-10 royal flush
-        ["value" => "K", "suit" => "hearts"],
+    $holes = [
+        [["value" => "A", "suit" => "hearts"], ["value" => "K", "suit" => "hearts"]], // royal flush
+        [["value" => "9", "suit" => "hearts"], ["value" => "8", "suit" => "hearts"]], // 9-high straight flush
     ];
-    $player1Hole = [
-        ["value" => "9", "suit" => "hearts"],   // completes 9-10-J-Q-K... wait, no K here
-        ["value" => "8", "suit" => "hearts"],   // completes 8-9-10-J-Q straight flush
-    ];
-    $playerRules = [findRule($community, $player0Hole), findRule($community, $player1Hole)];
-    // Both return rank 1 — getWinner sees a tie and returns [0, 1]
-    expect($playerRules)->toBe([1, 1]);
-    // But the correct winner is only player 0; this assertion fails, proving the gap
-    expect(getWinner($playerRules))->toBe([0]);
+    expect(getWinner($community, $holes))->toBe([0]);
 });
 
-// Both players have rank 8 (one pair) but player 1 has a higher pair (Ks vs Qs).
-// Player 1 should win, not a tie.
-test('getWinner incorrectly declares a tie between a pair of Kings and a pair of Queens', function () {
+// Player 1 has a pair of Kings, player 0 has a pair of Queens.
+test('getWinner returns [1] for pair of Kings over pair of Queens', function () {
     $community = [
         ["value" => "5", "suit" => "hearts"],
         ["value" => "7", "suit" => "diamonds"],
@@ -221,24 +275,15 @@ test('getWinner incorrectly declares a tie between a pair of Kings and a pair of
         ["value" => "3", "suit" => "spades"],
         ["value" => "9", "suit" => "hearts"],
     ];
-    $player0Hole = [
-        ["value" => "Q", "suit" => "hearts"],
-        ["value" => "Q", "suit" => "spades"],   // pair of Queens
+    $holes = [
+        [["value" => "Q", "suit" => "hearts"], ["value" => "Q", "suit" => "spades"]], // pair of Queens
+        [["value" => "K", "suit" => "hearts"], ["value" => "K", "suit" => "spades"]], // pair of Kings
     ];
-    $player1Hole = [
-        ["value" => "K", "suit" => "hearts"],
-        ["value" => "K", "suit" => "spades"],   // pair of Kings
-    ];
-    $playerRules = [findRule($community, $player0Hole), findRule($community, $player1Hole)];
-    // Both return rank 8 — getWinner sees a tie and returns [0, 1]
-    expect($playerRules)->toBe([8, 8]);
-    // But the correct winner is only player 1; this assertion fails, proving the gap
-    expect(getWinner($playerRules))->toBe([1]);
+    expect(getWinner($community, $holes))->toBe([1]);
 });
 
-// Both players have rank 9 (high card) but player 0's best card is an Ace vs a King.
-// Player 0 should win, not a tie.
-test('getWinner incorrectly declares a tie between Ace-high and King-high', function () {
+// Player 0 has Ace-high, player 1 has King-high.
+test('getWinner returns [0] for Ace-high over King-high', function () {
     $community = [
         ["value" => "8", "suit" => "hearts"],
         ["value" => "5", "suit" => "diamonds"],
@@ -246,18 +291,10 @@ test('getWinner incorrectly declares a tie between Ace-high and King-high', func
         ["value" => "J", "suit" => "spades"],
         ["value" => "2", "suit" => "hearts"],
     ];
-    $player0Hole = [
-        ["value" => "A", "suit" => "clubs"],    // Ace high
-        ["value" => "4", "suit" => "diamonds"],
+    $holes = [
+        [["value" => "A", "suit" => "clubs"], ["value" => "4", "suit" => "diamonds"]], // Ace high
+        [["value" => "K", "suit" => "clubs"], ["value" => "6", "suit" => "diamonds"]], // King high
     ];
-    $player1Hole = [
-        ["value" => "K", "suit" => "clubs"],    // King high
-        ["value" => "6", "suit" => "diamonds"],
-    ];
-    $playerRules = [findRule($community, $player0Hole), findRule($community, $player1Hole)];
-    // Both return rank 9 — getWinner sees a tie and returns [0, 1]
-    expect($playerRules)->toBe([9, 9]);
-    // But the correct winner is only player 0; this assertion fails, proving the gap
-    expect(getWinner($playerRules))->toBe([0]);
+    expect(getWinner($community, $holes))->toBe([0]);
 });
 
